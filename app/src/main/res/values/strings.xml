@@ -1,3 +1,21 @@
 <resources>
-    <string name="app_name">android2</string>
+    <string name="app_name">Погода</string>
+    <string name="city_name">Город</string>
+    <string name="city_temp">15</string>
+    <string name="feels_like">Ощущается как:</string>
+    <string name="pressure">Давление:</string>
+    <string name="pressure_value">750 мм.рт.ст.</string>
+    <string name="wind_speed_value">20 м/с</string>
+    <string name="wind_direction">Направление ветра:</string>
+    <string name="wind_speed">Скорость ветра:</string>
+    <string name="query_hint">Поиск по городу</string>
+    <string name="wind_n">северный</string>
+    <string name="wind_ne">северо-западный</string>
+    <string name="wind_e">западный</string>
+    <string name="wind_se">юго-западный</string>
+    <string name="wind_s">южный</string>
+    <string name="wind_sw">юго-восточный</string>
+    <string name="wind_w">восточный</string>
+    <string name="wind_nw">северо-восточный</string>
+    <string name="weather_state">Пасмурно</string>
 </resources>

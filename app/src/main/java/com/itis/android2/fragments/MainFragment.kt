@@ -26,7 +26,6 @@ import kotlinx.coroutines.launch
 private const val DEFAULT_LATITUDE = 55.7887
 private const val DEFAULT_LONGITUDE = 49.1221
 private const val CITY_LIST_SIZE = 10
-private const val HTTP_STATUS_NOT_FOUND = 404
 
 class MainFragment : Fragment(R.layout.fragment_main) {
 

@@ -109,10 +109,12 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private fun checkInputData(city: String?) {
         city?.let {
             lifecycleScope.launch {
-                val weatherResponse = repository.getWeatherByCity(city)
-                if (weatherResponse.cod == HTTP_STATUS_NOT_FOUND)
+                try{
+                    val weatherResponse = repository.getWeatherByCity(city)
+                    showCityFragment(weatherResponse.id)
+                } catch (e: RuntimeException){
                     showMessage("Город не найден")
-                else showCityFragment(weatherResponse.id)
+                }
             }
         }
     }

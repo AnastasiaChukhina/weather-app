@@ -1,9 +1,10 @@
-package com.itis.android2
+package com.itis.android2.presentation
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.navigation.NavController
-import com.itis.android2.extensions.findController
+import com.itis.android2.R
+import com.itis.android2.presentation.extensions.findController
 
 class MainActivity : AppCompatActivity() {
 

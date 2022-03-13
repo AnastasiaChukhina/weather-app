@@ -1,4 +1,4 @@
-package com.itis.android2.helpers
+package com.itis.android2.domain.helpers
 
 import kotlin.math.roundToInt
 

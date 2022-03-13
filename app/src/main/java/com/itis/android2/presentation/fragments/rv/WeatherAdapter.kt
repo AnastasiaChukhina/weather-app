@@ -1,14 +1,13 @@
-package com.itis.android2.rv
+package com.itis.android2.presentation.fragments.rv
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.itis.android2.data.api.WeatherResponse
-import com.itis.android2.data.api.response.NearCityWeather
+import com.itis.android2.domain.models.WeatherSimple
 
 class WeatherAdapter(
-    private val list: List<NearCityWeather>,
+    private val list: MutableList<WeatherSimple>,
     private val action: (Int) -> (Unit)
-): RecyclerView.Adapter<WeatherHolder>() {
+) : RecyclerView.Adapter<WeatherHolder>() {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,

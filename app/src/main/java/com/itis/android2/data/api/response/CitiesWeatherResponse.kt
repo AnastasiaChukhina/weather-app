@@ -1,6 +1,4 @@
-package com.itis.android2.data.api
-
-import com.itis.android2.data.api.response.NearCityWeather
+package com.itis.android2.data.api.response
 
 data class CitiesWeatherResponse(
     val cod: String,

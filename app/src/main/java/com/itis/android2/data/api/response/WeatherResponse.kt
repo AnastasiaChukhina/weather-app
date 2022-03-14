@@ -1,8 +1,6 @@
-package com.itis.android2.data.api
-
+package com.itis.android2.data.api.response
 
 import com.google.gson.annotations.SerializedName
-import com.itis.android2.data.api.response.*
 
 data class WeatherResponse(
     @SerializedName("base")

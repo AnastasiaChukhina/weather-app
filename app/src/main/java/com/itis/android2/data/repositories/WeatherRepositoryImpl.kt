@@ -1,9 +1,14 @@
-package com.itis.android2.data
+package com.itis.android2.data.repositories
 
 import com.itis.android2.BuildConfig
 import com.itis.android2.data.api.Api
-import com.itis.android2.data.api.CitiesWeatherResponse
-import com.itis.android2.data.api.WeatherResponse
+import com.itis.android2.data.api.mappers.WeatherMapper
+import com.itis.android2.data.api.response.Coord
+import com.itis.android2.domain.exceptions.GetCityListException
+import com.itis.android2.domain.exceptions.GetWeatherException
+import com.itis.android2.domain.models.WeatherDetail
+import com.itis.android2.domain.models.WeatherSimple
+import com.itis.android2.domain.repositories.WeatherRepository
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -18,7 +23,9 @@ private const val QUERY_UNITS_VALUE = "units"
 private const val API_LOCALE = "ru"
 private const val QUERY_LOCALE_VALUE = "lang"
 
-class WeatherRepository {
+class WeatherRepositoryImpl(
+    private val mapper: WeatherMapper
+) : WeatherRepository {
 
     private val apiKeyInterceptor = Interceptor { chain ->
         val original = chain.request()
@@ -73,23 +80,34 @@ class WeatherRepository {
             .create(Api::class.java)
     }
 
-    suspend fun getWeatherByCity(city: String): WeatherResponse {
-        return api.getWeatherByCity(city)
+    override suspend fun getWeatherByCity(name: String): WeatherDetail {
+        try {
+            return mapper.mapWeatherDetail(api.getWeatherByCity(name))
+        } catch (e: RuntimeException) {
+            throw GetWeatherException("Can't get weather by city", e)
+        }
     }
 
-    suspend fun getWeatherByCoordinates(lat: Double, lon: Double): WeatherResponse {
-        return api.getWeatherByCoordinates(lat, lon)
+    override suspend fun getWeatherById(id: Int): WeatherDetail {
+        try {
+            return mapper.mapWeatherDetail(api.getWeatherById(id))
+        } catch (e: RuntimeException) {
+            throw GetWeatherException("Can't get weather by id", e)
+        }
     }
 
-    suspend fun getWeatherById(id: Int): WeatherResponse {
-        return api.getWeatherById(id)
-    }
-
-    suspend fun getNearCitiesWeather(
-        lat: Double,
-        lon: Double,
+    override suspend fun getNearCitiesWeather(
+        coordinates: Coord,
         count: Int
-    ): CitiesWeatherResponse {
-        return api.getNearCitiesWeather(lat, lon, count)
+    ): MutableList<WeatherSimple> {
+        try {
+            val list: MutableList<WeatherSimple> = mutableListOf()
+            api.getNearCitiesWeather(coordinates.lat, coordinates.lon, count).list.forEach {
+                list.add(mapper.mapWeatherSimple(it))
+            }
+            return list
+        } catch (e: RuntimeException) {
+            throw GetCityListException("Can't get weather list", e)
+        }
     }
 }

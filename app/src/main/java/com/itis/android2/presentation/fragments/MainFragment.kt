@@ -3,83 +3,107 @@ package com.itis.android2.presentation.fragments
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.itis.android2.presentation.MainActivity
+import com.itis.android2.MainActivity
 import com.itis.android2.R
 import com.itis.android2.data.api.mappers.WeatherMapper
 import com.itis.android2.data.api.response.Coord
 import com.itis.android2.data.repositories.LocationRepositoryImpl
 import com.itis.android2.data.repositories.WeatherRepositoryImpl
 import com.itis.android2.databinding.FragmentMainBinding
-import com.itis.android2.domain.exceptions.GetWeatherException
 import com.itis.android2.domain.usecases.location.GetLocationUseCase
 import com.itis.android2.domain.usecases.weather.GetCityListUseCase
+import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
 import com.itis.android2.domain.usecases.weather.GetWeatherByNameUseCase
+import com.itis.android2.presentation.viewModels.MainViewModel
 import com.itis.android2.presentation.fragments.rv.WeatherAdapter
 import com.itis.android2.presentation.fragments.rv.itemDecorators.SpaceItemDecorator
-import kotlinx.coroutines.launch
+import com.itis.android2.utils.ViewModelFactory
 
 private const val CITY_LIST_SIZE = 10
 
 class MainFragment : Fragment(R.layout.fragment_main) {
 
-    private var binding: FragmentMainBinding? = null
+    private lateinit var binding: FragmentMainBinding
     private lateinit var coordinates: Coord
-
-    private lateinit var getLocation: GetLocationUseCase
-    private lateinit var getCityList: GetCityListUseCase
-    private lateinit var getCityWeather: GetWeatherByNameUseCase
-
-    private val weatherRepository by lazy {
-        WeatherRepositoryImpl(WeatherMapper())
-    }
-
-    private val locationRepository by lazy {
-        LocationRepositoryImpl(requireContext())
-    }
+    private lateinit var viewModel: MainViewModel
+    private lateinit var weatherAdapter: WeatherAdapter
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            getLastLocation()
-            initWeatherAdapter()
+            viewModel.getLocation()
+            viewModel.getCityList(coordinates, CITY_LIST_SIZE)
         }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentMainBinding.bind(view)
+        weatherAdapter = WeatherAdapter { showCityFragment(it) }
 
         setActionBarAttrs()
-        initUseCases()
+        initObjects()
+        initObservers()
         initSearchView()
-        decorateWeatherList()
+        initWeatherList()
     }
 
     override fun onResume() {
         super.onResume()
         if (!checkPermissions())
             requestPermissions()
-        getLastLocation()
-        initWeatherAdapter()
+        viewModel.getLocation()
+        viewModel.getCityList(coordinates, CITY_LIST_SIZE)
     }
 
-    private fun initUseCases() {
-        getLocation = GetLocationUseCase(locationRepository)
-        getCityList = GetCityListUseCase(weatherRepository)
-        getCityWeather = GetWeatherByNameUseCase(weatherRepository)
+    private fun initObjects() {
+        val weatherRepository = WeatherRepositoryImpl(WeatherMapper())
+
+        val factory = ViewModelFactory(
+            GetCityListUseCase(weatherRepository),
+            GetWeatherByNameUseCase(weatherRepository),
+            GetWeatherByIdUseCase(weatherRepository),
+            GetLocationUseCase(LocationRepositoryImpl(requireContext()))
+        )
+
+        viewModel = ViewModelProvider(
+            this,
+            factory
+        )[MainViewModel::class.java]
     }
 
-    private fun getLastLocation() {
-        coordinates = getLocation()
+    private fun initObservers() {
+        viewModel.location.observe(viewLifecycleOwner) {
+            it.fold(onSuccess = { result ->
+                coordinates = result
+            }, onFailure = {
+                Log.e("Location", "Can't get location")
+            })
+        }
+        viewModel.weatherList.observe(viewLifecycleOwner) {
+            it.fold(onSuccess = { result ->
+                weatherAdapter.submitList(result)
+            }, onFailure = {
+                showMessage("Не удается получить погоду в ближайших населенных пунктах.")
+            })
+        }
+        viewModel.weatherDetail.observe(viewLifecycleOwner) {
+            it.fold(onSuccess = { weatherData ->
+                showCityFragment(weatherData.id)
+            }, onFailure = {
+                showMessage("Город не найден.")
+            })
+        }
     }
 
     private fun setActionBarAttrs() {
@@ -90,25 +114,13 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
-    private fun decorateWeatherList() {
-        binding?.rvCities?.apply {
+    private fun initWeatherList() {
+        binding.rvCities.apply {
+            adapter = weatherAdapter
             addItemDecoration(
                 DividerItemDecoration(requireContext(), RecyclerView.VERTICAL)
             )
             addItemDecoration(SpaceItemDecorator(context))
-        }
-    }
-
-    private fun checkInputData(city: String?) {
-        city?.let {
-            lifecycleScope.launch {
-                try {
-                    val weatherResponse = getCityWeather(city)
-                    showCityFragment(weatherResponse.id)
-                } catch (e: GetWeatherException) {
-                    showMessage("Город не найден")
-                }
-            }
         }
     }
 
@@ -135,22 +147,10 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         return false
     }
 
-    private fun initWeatherAdapter() {
-        lifecycleScope.launch {
-            binding?.rvCities?.apply {
-                adapter = WeatherAdapter(
-                    weatherRepository.getNearCitiesWeather(coordinates, CITY_LIST_SIZE)
-                ) {
-                    showCityFragment(it)
-                }
-            }
-        }
-    }
-
     private fun initSearchView() {
-        binding?.svCity?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        binding.svCity.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                checkInputData(query?.trim())
+                viewModel.getDetailedWeatherByName(query?.trim().toString())
                 return false
             }
 
@@ -185,10 +185,5 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             message,
             Snackbar.LENGTH_LONG
         ).show()
-    }
-
-    override fun onDestroyView() {
-        binding = null
-        super.onDestroyView()
     }
 }

@@ -1,13 +1,13 @@
 package com.itis.android2.presentation.fragments.rv
 
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import com.itis.android2.domain.models.WeatherSimple
 
 class WeatherAdapter(
-    private val list: MutableList<WeatherSimple>,
     private val action: (Int) -> (Unit)
-) : RecyclerView.Adapter<WeatherHolder>() {
+) : ListAdapter<WeatherSimple, WeatherHolder>(WeatherDiffUtilsCallback()) {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -15,8 +15,26 @@ class WeatherAdapter(
     ): WeatherHolder = WeatherHolder.create(parent, action)
 
     override fun onBindViewHolder(holder: WeatherHolder, position: Int) {
-        holder.bind(list[position])
+        holder.bind(getItem(position))
     }
 
-    override fun getItemCount(): Int = list.size
+    override fun submitList(list: MutableList<WeatherSimple>?) {
+        super.submitList(
+            if (list == null) null
+            else ArrayList(list)
+        )
+    }
+}
+
+class WeatherDiffUtilsCallback : DiffUtil.ItemCallback<WeatherSimple>() {
+
+    override fun areItemsTheSame(
+        oldItem: WeatherSimple,
+        newItem: WeatherSimple
+    ): Boolean = oldItem.id == newItem.id
+
+    override fun areContentsTheSame(
+        oldItem: WeatherSimple,
+        newItem: WeatherSimple
+    ): Boolean = oldItem == newItem
 }

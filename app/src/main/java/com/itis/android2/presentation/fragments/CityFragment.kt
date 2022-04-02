@@ -1,6 +1,5 @@
 package com.itis.android2.presentation.fragments
 
-import android.content.Context
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -15,29 +14,31 @@ import com.itis.android2.presentation.MainActivity
 import com.itis.android2.R
 import com.itis.android2.databinding.FragmentCityBinding
 import com.itis.android2.domain.models.WeatherDetail
-import com.itis.android2.domain.helpers.WeatherDataHandler
+import com.itis.android2.domain.converters.WeatherDataConverter
+import com.itis.android2.domain.converters.WindDirectionsConverter
 import com.itis.android2.presentation.viewModels.DetailedScreenViewModel
-import com.itis.android2.utils.AppViewModelFactory
 import javax.inject.Inject
 
 class CityFragment : Fragment(R.layout.fragment_city) {
 
     private lateinit var binding: FragmentCityBinding
-    private lateinit var windDirections: List<String>
 
     @Inject
     lateinit var factory: ViewModelProvider.Factory
 
     @Inject
-    lateinit var dataHandler: WeatherDataHandler
+    lateinit var dataConverter: WeatherDataConverter
+
+    @Inject
+    lateinit var windConverter: WindDirectionsConverter
 
     private val viewModel: DetailedScreenViewModel by viewModels {
         factory
     }
 
-    override fun onAttach(context: Context) {
-        (context.applicationContext as App).appComponent.inject(this)
-        super.onAttach(context)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        (activity?.application as App).appComponent.inject(this)
+        super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -46,7 +47,6 @@ class CityFragment : Fragment(R.layout.fragment_city) {
         binding = FragmentCityBinding.bind(view)
 
         initObservers()
-        getWindDirections()
         getWeatherData()
     }
 
@@ -80,18 +80,13 @@ class CityFragment : Fragment(R.layout.fragment_city) {
         initActionBarAttrs(weather.name)
 
         binding.apply {
-            ivWeatherIcon.load(dataHandler.setImageIconUrl(weather.icon))
-            tvFeelsLikeValue.text = dataHandler.convertTempToString(weather.feelsLike)
-            tvPressureValue.text = dataHandler.convertPressureToString(weather.pressure)
+            ivWeatherIcon.load(dataConverter.setImageIconUrl(weather.icon))
+            tvFeelsLikeValue.text = dataConverter.convertTempToString(weather.feelsLike)
+            tvPressureValue.text = dataConverter.convertPressureToString(weather.pressure)
             tvWeatherState.text = weather.description
-            tvCityTempValue.text = dataHandler.convertTempToString(weather.temp)
-            tvWindDirectionValue.text = windDirections.let {
-                dataHandler.convertWindDegreeToString(
-                    weather.deg,
-                    it
-                )
-            }
-            tvWindSpeedValue.text = dataHandler.convertSpeedToString(weather.speed)
+            tvCityTempValue.text = dataConverter.convertTempToString(weather.temp)
+            tvWindDirectionValue.text = windConverter.convertWindToString(weather.deg)
+            tvWindSpeedValue.text = dataConverter.convertSpeedToString(weather.speed)
         }
     }
 
@@ -105,19 +100,6 @@ class CityFragment : Fragment(R.layout.fragment_city) {
 
     private fun returnToMainFragment() {
         findNavController().popBackStack()
-    }
-
-    private fun getWindDirections() {
-        windDirections = listOf(
-            getString(R.string.wind_n),
-            getString(R.string.wind_ne),
-            getString(R.string.wind_e),
-            getString(R.string.wind_se),
-            getString(R.string.wind_s),
-            getString(R.string.wind_sw),
-            getString(R.string.wind_w),
-            getString(R.string.wind_nw)
-        )
     }
 
     private fun showMessage(message: String) {

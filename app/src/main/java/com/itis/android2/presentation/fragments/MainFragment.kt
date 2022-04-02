@@ -1,7 +1,6 @@
 package com.itis.android2.presentation.fragments
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -22,11 +21,10 @@ import com.itis.android2.presentation.MainActivity
 import com.itis.android2.R
 import com.itis.android2.data.api.response.Coord
 import com.itis.android2.databinding.FragmentMainBinding
-import com.itis.android2.domain.helpers.WeatherDataHandler
+import com.itis.android2.domain.converters.WeatherDataConverter
 import com.itis.android2.presentation.viewModels.MainViewModel
 import com.itis.android2.presentation.rv.WeatherAdapter
 import com.itis.android2.presentation.rv.itemDecorators.SpaceItemDecorator
-import com.itis.android2.utils.AppViewModelFactory
 import javax.inject.Inject
 
 private const val CITY_LIST_SIZE = 10
@@ -41,7 +39,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     lateinit var factory: ViewModelProvider.Factory
 
     @Inject
-    lateinit var dataHandler: WeatherDataHandler
+    lateinit var dataConverter: WeatherDataConverter
 
     private val viewModel: MainViewModel by viewModels {
         factory
@@ -53,15 +51,15 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             viewModel.getCityList(coordinates, CITY_LIST_SIZE)
         }
 
-    override fun onAttach(context: Context) {
-        (context.applicationContext as App).appComponent.inject(this)
-        super.onAttach(context)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        (activity?.application as App).appComponent.inject(this)
+        super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentMainBinding.bind(view)
-        weatherAdapter = WeatherAdapter(dataHandler) { showCityFragment(it) }
+        weatherAdapter = WeatherAdapter(dataConverter) { showCityFragment(it) }
 
         setActionBarAttrs()
         initObservers()

@@ -11,6 +11,7 @@ import dagger.Component
 @Component(
     modules = [
         AppModule::class,
+        ConverterModule::class,
         MapperModule::class,
         NetModule::class,
         RepoModule::class,

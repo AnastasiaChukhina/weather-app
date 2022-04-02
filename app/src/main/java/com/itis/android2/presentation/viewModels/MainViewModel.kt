@@ -12,8 +12,9 @@ import com.itis.android2.domain.usecases.weather.GetCityListUseCase
 import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
 import com.itis.android2.domain.usecases.weather.GetWeatherByNameUseCase
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(
+class MainViewModel @Inject constructor(
     private val getCityListUseCase: GetCityListUseCase,
     private val getWeatherByNameUseCase: GetWeatherByNameUseCase,
     private val getLocationUseCase: GetLocationUseCase

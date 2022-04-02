@@ -1,4 +1,4 @@
-package com.itis.android2.presentation.fragments.rv
+package com.itis.android2.presentation.rv
 
 import android.view.LayoutInflater
 import android.view.View
@@ -12,41 +12,38 @@ import com.itis.android2.domain.models.WeatherSimple
 import com.itis.android2.domain.helpers.WeatherDataHandler
 import kotlin.math.roundToInt
 
-private const val WEATHER_UPPER = 100
-private const val WEATHER_WARM = 20
-private const val WEATHER_NEUTRAL_PLUS = 10
-private const val WEATHER_ZERO = 0
-private const val WEATHER_NEUTRAL_MINUS = -10
-private const val WEATHER_COLD = -20
-private const val WEATHER_LOWER = -100
+private const val WARM = 20
+private const val NEUTRAL = 10
+private const val ZERO = 0
+private const val COOL = -10
+private const val COLD = -20
 
 class WeatherHolder(
     private val binding: ItemWeatherBinding,
+    private val dataHandler: WeatherDataHandler,
     private val action: (Int) -> Unit
 ) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(item: WeatherSimple) {
         with(binding) {
             tvCityName.text = item.name
-            tvCityTemp.text = WeatherDataHandler.convertTempToString(item.temp)
-            ivImage.load(
-                WeatherDataHandler.setImageIconUrl(item.icon)
-            )
-        }
-        itemView.setOnClickListener {
-            action(item.id)
+            tvCityTemp.text = dataHandler.convertTempToString(item.temp)
+            ivImage.load(dataHandler.setImageIconUrl(item.icon))
+            itemView.setOnClickListener {
+                action(item.id)
+            }
         }
         setBackgroundColor(itemView, item)
     }
 
     private fun setBackgroundColor(itemView: View, item: WeatherSimple) {
         when (item.temp.roundToInt()) {
-            in WEATHER_WARM..WEATHER_UPPER -> setColor(itemView, R.color.hot)
-            in WEATHER_NEUTRAL_PLUS..WEATHER_WARM -> setColor(itemView, R.color.warm)
-            in WEATHER_ZERO..WEATHER_NEUTRAL_PLUS -> setColor(itemView, R.color.neutral)
-            in WEATHER_NEUTRAL_MINUS..WEATHER_ZERO -> setColor(itemView, R.color.cold)
-            in WEATHER_COLD..WEATHER_NEUTRAL_MINUS -> setColor(itemView, R.color.frozen)
-            in WEATHER_LOWER..WEATHER_COLD -> setColor(itemView, R.color.extremely_cold)
+            in WARM..Int.MAX_VALUE -> setColor(itemView, R.color.hot)
+            in NEUTRAL..WARM -> setColor(itemView, R.color.warm)
+            in ZERO..NEUTRAL -> setColor(itemView, R.color.neutral)
+            in COOL..ZERO -> setColor(itemView, R.color.cold)
+            in COLD..COOL -> setColor(itemView, R.color.frozen)
+            else -> setColor(itemView, R.color.extremely_cold)
         }
     }
 
@@ -62,6 +59,7 @@ class WeatherHolder(
     companion object {
         fun create(
             parent: ViewGroup,
+            dataHandler: WeatherDataHandler,
             action: (Int) -> Unit
         ) = WeatherHolder(
             ItemWeatherBinding.inflate(
@@ -69,6 +67,7 @@ class WeatherHolder(
                 parent,
                 false
             ),
+            dataHandler,
             action
         )
     }

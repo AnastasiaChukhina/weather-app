@@ -9,7 +9,7 @@ private const val DEGREES = 360
 private const val PRESSURE_UNITS = "мм.рт.ст"
 private const val WIND_SPEED_UNITS = "м/с"
 
-object WeatherDataHandler {
+class WeatherDataHandler {
 
     fun convertTempToString(temp: Double?): String = temp.toString() + DEGREE_UNIT_UNICODE
 

@@ -1,40 +1,50 @@
 package com.itis.android2.presentation.fragments
 
+import android.content.Context
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import coil.load
 import com.google.android.material.snackbar.Snackbar
-import com.itis.android2.MainActivity
+import com.itis.android2.App
+import com.itis.android2.presentation.MainActivity
 import com.itis.android2.R
-import com.itis.android2.data.api.mappers.WeatherMapper
-import com.itis.android2.data.repositories.LocationRepositoryImpl
-import com.itis.android2.data.repositories.WeatherRepositoryImpl
 import com.itis.android2.databinding.FragmentCityBinding
 import com.itis.android2.domain.models.WeatherDetail
 import com.itis.android2.domain.helpers.WeatherDataHandler
-import com.itis.android2.domain.usecases.location.GetLocationUseCase
-import com.itis.android2.domain.usecases.weather.GetCityListUseCase
-import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
-import com.itis.android2.domain.usecases.weather.GetWeatherByNameUseCase
 import com.itis.android2.presentation.viewModels.DetailedScreenViewModel
-import com.itis.android2.utils.ViewModelFactory
+import com.itis.android2.utils.AppViewModelFactory
+import javax.inject.Inject
 
 class CityFragment : Fragment(R.layout.fragment_city) {
 
     private lateinit var binding: FragmentCityBinding
-    private lateinit var viewModel: DetailedScreenViewModel
     private lateinit var windDirections: List<String>
+
+    @Inject
+    lateinit var factory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var dataHandler: WeatherDataHandler
+
+    private val viewModel: DetailedScreenViewModel by viewModels {
+        factory
+    }
+
+    override fun onAttach(context: Context) {
+        (context.applicationContext as App).appComponent.inject(this)
+        super.onAttach(context)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCityBinding.bind(view)
 
-        initObjects()
         initObservers()
         getWindDirections()
         getWeatherData()
@@ -49,23 +59,6 @@ class CityFragment : Fragment(R.layout.fragment_city) {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
-    private fun initObjects() {
-        val weatherRepository = WeatherRepositoryImpl(WeatherMapper())
-
-        val factory = ViewModelFactory(
-            GetCityListUseCase(weatherRepository),
-            GetWeatherByNameUseCase(weatherRepository),
-            GetWeatherByIdUseCase(weatherRepository),
-            GetLocationUseCase(LocationRepositoryImpl(requireContext()))
-        )
-
-        viewModel = ViewModelProvider(
-            this,
-            factory
-        )[DetailedScreenViewModel::class.java]
-    }
-
 
     private fun initObservers() {
         viewModel.weatherDetail.observe(viewLifecycleOwner) {
@@ -87,18 +80,18 @@ class CityFragment : Fragment(R.layout.fragment_city) {
         initActionBarAttrs(weather.name)
 
         binding.apply {
-            ivWeatherIcon.load(WeatherDataHandler.setImageIconUrl(weather.icon))
-            tvFeelsLikeValue.text = WeatherDataHandler.convertTempToString(weather.feelsLike)
-            tvPressureValue.text = WeatherDataHandler.convertPressureToString(weather.pressure)
+            ivWeatherIcon.load(dataHandler.setImageIconUrl(weather.icon))
+            tvFeelsLikeValue.text = dataHandler.convertTempToString(weather.feelsLike)
+            tvPressureValue.text = dataHandler.convertPressureToString(weather.pressure)
             tvWeatherState.text = weather.description
-            tvCityTempValue.text = WeatherDataHandler.convertTempToString(weather.temp)
+            tvCityTempValue.text = dataHandler.convertTempToString(weather.temp)
             tvWindDirectionValue.text = windDirections.let {
-                WeatherDataHandler.convertWindDegreeToString(
+                dataHandler.convertWindDegreeToString(
                     weather.deg,
                     it
                 )
             }
-            tvWindSpeedValue.text = WeatherDataHandler.convertSpeedToString(weather.speed)
+            tvWindSpeedValue.text = dataHandler.convertSpeedToString(weather.speed)
         }
     }
 

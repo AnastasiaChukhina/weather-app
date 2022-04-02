@@ -7,8 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.itis.android2.domain.models.WeatherDetail
 import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class DetailedScreenViewModel(
+class DetailedScreenViewModel @Inject constructor(
     private val getWeatherByIdUseCase: GetWeatherByIdUseCase
 ): ViewModel() {
 

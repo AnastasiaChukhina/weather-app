@@ -91,7 +91,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             })
         }
         viewModel.weatherDetail.observe(viewLifecycleOwner) {
-            it.fold(onSuccess = { weatherData ->
+            it?.fold(onSuccess = { weatherData ->
                 showCityFragment(weatherData.id)
             }, onFailure = {
                 showMessage("Город не найден.")

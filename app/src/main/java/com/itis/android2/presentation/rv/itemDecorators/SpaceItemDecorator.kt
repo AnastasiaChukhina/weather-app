@@ -1,4 +1,4 @@
-package com.itis.android2.presentation.fragments.rv.itemDecorators
+package com.itis.android2.presentation.rv.itemDecorators
 
 import android.content.Context
 import android.graphics.Rect

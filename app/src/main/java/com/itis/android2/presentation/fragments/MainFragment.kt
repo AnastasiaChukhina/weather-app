@@ -9,27 +9,23 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.itis.android2.MainActivity
+import com.itis.android2.App
+import com.itis.android2.presentation.MainActivity
 import com.itis.android2.R
-import com.itis.android2.data.api.mappers.WeatherMapper
 import com.itis.android2.data.api.response.Coord
-import com.itis.android2.data.repositories.LocationRepositoryImpl
-import com.itis.android2.data.repositories.WeatherRepositoryImpl
 import com.itis.android2.databinding.FragmentMainBinding
-import com.itis.android2.domain.usecases.location.GetLocationUseCase
-import com.itis.android2.domain.usecases.weather.GetCityListUseCase
-import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
-import com.itis.android2.domain.usecases.weather.GetWeatherByNameUseCase
+import com.itis.android2.domain.converters.WeatherDataConverter
 import com.itis.android2.presentation.viewModels.MainViewModel
-import com.itis.android2.presentation.fragments.rv.WeatherAdapter
-import com.itis.android2.presentation.fragments.rv.itemDecorators.SpaceItemDecorator
-import com.itis.android2.utils.ViewModelFactory
+import com.itis.android2.presentation.rv.WeatherAdapter
+import com.itis.android2.presentation.rv.itemDecorators.SpaceItemDecorator
+import javax.inject.Inject
 
 private const val CITY_LIST_SIZE = 10
 
@@ -37,8 +33,17 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     private lateinit var binding: FragmentMainBinding
     private lateinit var coordinates: Coord
-    private lateinit var viewModel: MainViewModel
     private lateinit var weatherAdapter: WeatherAdapter
+
+    @Inject
+    lateinit var factory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var dataConverter: WeatherDataConverter
+
+    private val viewModel: MainViewModel by viewModels {
+        factory
+    }
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -46,13 +51,17 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             viewModel.getCityList(coordinates, CITY_LIST_SIZE)
         }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        (activity?.application as App).appComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentMainBinding.bind(view)
-        weatherAdapter = WeatherAdapter { showCityFragment(it) }
+        weatherAdapter = WeatherAdapter(dataConverter) { showCityFragment(it) }
 
         setActionBarAttrs()
-        initObjects()
         initObservers()
         initSearchView()
         initWeatherList()
@@ -64,22 +73,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             requestPermissions()
         viewModel.getLocation()
         viewModel.getCityList(coordinates, CITY_LIST_SIZE)
-    }
-
-    private fun initObjects() {
-        val weatherRepository = WeatherRepositoryImpl(WeatherMapper())
-
-        val factory = ViewModelFactory(
-            GetCityListUseCase(weatherRepository),
-            GetWeatherByNameUseCase(weatherRepository),
-            GetWeatherByIdUseCase(weatherRepository),
-            GetLocationUseCase(LocationRepositoryImpl(requireContext()))
-        )
-
-        viewModel = ViewModelProvider(
-            this,
-            factory
-        )[MainViewModel::class.java]
     }
 
     private fun initObservers() {
@@ -98,7 +91,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             })
         }
         viewModel.weatherDetail.observe(viewLifecycleOwner) {
-            it.fold(onSuccess = { weatherData ->
+            it?.fold(onSuccess = { weatherData ->
                 showCityFragment(weatherData.id)
             }, onFailure = {
                 showMessage("Город не найден.")

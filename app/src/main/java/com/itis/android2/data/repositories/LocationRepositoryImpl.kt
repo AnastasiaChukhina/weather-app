@@ -5,11 +5,12 @@ import android.content.Context
 import com.google.android.gms.location.LocationServices
 import com.itis.android2.data.api.response.Coord
 import com.itis.android2.domain.repositories.LocationRepository
+import javax.inject.Inject
 
 private const val DEFAULT_LATITUDE = 55.7887
 private const val DEFAULT_LONGITUDE = 49.1221
 
-class LocationRepositoryImpl(
+class LocationRepositoryImpl @Inject constructor(
     private val context: Context
 ) : LocationRepository {
 

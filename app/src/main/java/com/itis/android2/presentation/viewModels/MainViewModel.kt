@@ -12,8 +12,9 @@ import com.itis.android2.domain.usecases.weather.GetCityListUseCase
 import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
 import com.itis.android2.domain.usecases.weather.GetWeatherByNameUseCase
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(
+class MainViewModel @Inject constructor(
     private val getCityListUseCase: GetCityListUseCase,
     private val getWeatherByNameUseCase: GetWeatherByNameUseCase,
     private val getLocationUseCase: GetLocationUseCase
@@ -22,8 +23,8 @@ class MainViewModel(
     private var _weatherList: MutableLiveData<Result<MutableList<WeatherSimple>>> = MutableLiveData()
     val weatherList: LiveData<Result<MutableList<WeatherSimple>>> = _weatherList
 
-    private var _weatherDetail: MutableLiveData<Result<WeatherDetail>> = MutableLiveData()
-    val weatherDetail: LiveData<Result<WeatherDetail>> = _weatherDetail
+    private var _weatherDetail: SingleLiveEvent<Result<WeatherDetail>> = SingleLiveEvent()
+    val weatherDetail: SingleLiveEvent<Result<WeatherDetail>> = _weatherDetail
 
     private var _location: MutableLiveData<Result<Coord>> = MutableLiveData()
     val location: LiveData<Result<Coord>> = _location

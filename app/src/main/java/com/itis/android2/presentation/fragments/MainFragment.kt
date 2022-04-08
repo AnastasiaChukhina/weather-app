@@ -10,25 +10,25 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.itis.android2.App
-import com.itis.android2.presentation.MainActivity
 import com.itis.android2.R
 import com.itis.android2.data.api.response.Coord
 import com.itis.android2.databinding.FragmentMainBinding
 import com.itis.android2.domain.converters.WeatherDataConverter
-import com.itis.android2.presentation.viewModels.MainViewModel
+import com.itis.android2.presentation.MainActivity
 import com.itis.android2.presentation.rv.WeatherAdapter
 import com.itis.android2.presentation.rv.itemDecorators.SpaceItemDecorator
+import com.itis.android2.presentation.viewModels.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 private const val CITY_LIST_SIZE = 10
 
+@AndroidEntryPoint
 class MainFragment : Fragment(R.layout.fragment_main) {
 
     private lateinit var binding: FragmentMainBinding
@@ -36,25 +36,15 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private lateinit var weatherAdapter: WeatherAdapter
 
     @Inject
-    lateinit var factory: ViewModelProvider.Factory
-
-    @Inject
     lateinit var dataConverter: WeatherDataConverter
 
-    private val viewModel: MainViewModel by viewModels {
-        factory
-    }
+    private val viewModel: MainViewModel by viewModels()
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             viewModel.getLocation()
             viewModel.getCityList(coordinates, CITY_LIST_SIZE)
         }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        (activity?.application as App).appComponent.inject(this)
-        super.onCreate(savedInstanceState)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

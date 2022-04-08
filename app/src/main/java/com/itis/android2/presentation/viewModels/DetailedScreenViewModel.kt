@@ -6,12 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.itis.android2.domain.models.WeatherDetail
 import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@HiltViewModel
 class DetailedScreenViewModel @Inject constructor(
     private val getWeatherByIdUseCase: GetWeatherByIdUseCase
-): ViewModel() {
+) : ViewModel() {
 
     private var _weatherDetail: MutableLiveData<Result<WeatherDetail>> = MutableLiveData()
     val weatherDetail: LiveData<Result<WeatherDetail>> = _weatherDetail

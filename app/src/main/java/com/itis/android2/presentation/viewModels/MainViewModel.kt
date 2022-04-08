@@ -9,18 +9,20 @@ import com.itis.android2.domain.models.WeatherDetail
 import com.itis.android2.domain.models.WeatherSimple
 import com.itis.android2.domain.usecases.location.GetLocationUseCase
 import com.itis.android2.domain.usecases.weather.GetCityListUseCase
-import com.itis.android2.domain.usecases.weather.GetWeatherByIdUseCase
 import com.itis.android2.domain.usecases.weather.GetWeatherByNameUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@HiltViewModel
 class MainViewModel @Inject constructor(
     private val getCityListUseCase: GetCityListUseCase,
     private val getWeatherByNameUseCase: GetWeatherByNameUseCase,
     private val getLocationUseCase: GetLocationUseCase
 ) : ViewModel() {
 
-    private var _weatherList: MutableLiveData<Result<MutableList<WeatherSimple>>> = MutableLiveData()
+    private var _weatherList: MutableLiveData<Result<MutableList<WeatherSimple>>> =
+        MutableLiveData()
     val weatherList: LiveData<Result<MutableList<WeatherSimple>>> = _weatherList
 
     private var _weatherDetail: SingleLiveEvent<Result<WeatherDetail>> = SingleLiveEvent()

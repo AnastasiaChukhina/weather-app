@@ -3,10 +3,13 @@ package com.itis.android2.di.modules
 import com.itis.android2.BuildConfig
 import com.itis.android2.data.api.Api
 import com.itis.android2.di.modules.qualifiers.ApiKey
+import com.itis.android2.di.modules.qualifiers.ApiLanguage
 import com.itis.android2.di.modules.qualifiers.ApiUnits
 import com.itis.android2.di.modules.qualifiers.Logger
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -22,6 +25,7 @@ private const val API_LOCALE = "ru"
 private const val QUERY_LOCALE_VALUE = "lang"
 
 @Module
+@InstallIn(SingletonComponent::class)
 class NetModule {
 
     @Provides
@@ -45,6 +49,20 @@ class NetModule {
         val original = chain.request()
         val newURL = original.url.newBuilder()
             .addQueryParameter(QUERY_UNITS_VALUE, API_UNITS)
+            .build()
+
+        chain.proceed(
+            original.newBuilder()
+                .url(newURL)
+                .build()
+        )
+    }
+
+    @Provides
+    @ApiLanguage
+    fun provideApiLangInterceptor() = Interceptor { chain ->
+        val original = chain.request()
+        val newURL = original.url.newBuilder()
             .addQueryParameter(QUERY_LOCALE_VALUE, API_LOCALE)
             .build()
 
@@ -68,11 +86,13 @@ class NetModule {
     fun providesOkhttp(
         @ApiKey apiKeyInterceptor: Interceptor,
         @ApiUnits apiUnitsInterceptor: Interceptor,
+        @ApiLanguage apiLanguageInterceptor: Interceptor,
         @Logger loggingInterceptor: Interceptor
     ): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(apiKeyInterceptor)
             .addInterceptor(apiUnitsInterceptor)
+            .addInterceptor(apiLanguageInterceptor)
             .also {
                 if (BuildConfig.DEBUG) {
                     it.addInterceptor(loggingInterceptor)

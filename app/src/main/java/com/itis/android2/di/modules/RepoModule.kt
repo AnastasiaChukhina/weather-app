@@ -6,8 +6,11 @@ import com.itis.android2.domain.repositories.LocationRepository
 import com.itis.android2.domain.repositories.WeatherRepository
 import dagger.Binds
 import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 
 @Module
+@InstallIn(SingletonComponent::class)
 interface RepoModule {
 
     @Binds

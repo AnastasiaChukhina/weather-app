@@ -5,26 +5,27 @@ import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import coil.load
 import com.google.android.material.snackbar.Snackbar
-import com.itis.android2.App
-import com.itis.android2.presentation.MainActivity
 import com.itis.android2.R
 import com.itis.android2.databinding.FragmentCityBinding
-import com.itis.android2.domain.models.WeatherDetail
 import com.itis.android2.domain.converters.WeatherDataConverter
 import com.itis.android2.domain.converters.WindDirectionsConverter
+import com.itis.android2.domain.models.WeatherDetail
+import com.itis.android2.presentation.MainActivity
 import com.itis.android2.presentation.viewModels.DetailedScreenViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class CityFragment : Fragment(R.layout.fragment_city) {
 
     private lateinit var binding: FragmentCityBinding
 
-    @Inject
-    lateinit var factory: ViewModelProvider.Factory
+    private val cityId: Int by lazy {
+        arguments?.getInt("ARG_CITY_ID") ?: -1
+    }
 
     @Inject
     lateinit var dataConverter: WeatherDataConverter
@@ -32,13 +33,11 @@ class CityFragment : Fragment(R.layout.fragment_city) {
     @Inject
     lateinit var windConverter: WindDirectionsConverter
 
-    private val viewModel: DetailedScreenViewModel by viewModels {
-        factory
-    }
+    @Inject
+    lateinit var factory: DetailedScreenViewModel.Factory
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        (activity?.application as App).appComponent.inject(this)
-        super.onCreate(savedInstanceState)
+    private val viewModel: DetailedScreenViewModel by viewModels {
+        DetailedScreenViewModel.provideFactory(factory, cityId)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -71,9 +70,7 @@ class CityFragment : Fragment(R.layout.fragment_city) {
     }
 
     private fun getWeatherData() {
-        arguments?.getInt("ARG_CITY_ID")?.let {
-            viewModel.getWeatherById(it)
-        }
+        viewModel.getWeatherById()
     }
 
     private fun initAttrs(weather: WeatherDetail) {

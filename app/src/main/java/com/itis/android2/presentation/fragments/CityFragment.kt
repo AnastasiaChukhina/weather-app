@@ -23,13 +23,22 @@ class CityFragment : Fragment(R.layout.fragment_city) {
 
     private lateinit var binding: FragmentCityBinding
 
+    private val cityId: Int by lazy {
+        arguments?.getInt("ARG_CITY_ID") ?: -1
+    }
+
     @Inject
     lateinit var dataConverter: WeatherDataConverter
 
     @Inject
     lateinit var windConverter: WindDirectionsConverter
 
-    private val viewModel: DetailedScreenViewModel by viewModels()
+    @Inject
+    lateinit var factory: DetailedScreenViewModel.Factory
+
+    private val viewModel: DetailedScreenViewModel by viewModels {
+        DetailedScreenViewModel.provideFactory(factory, cityId)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -61,9 +70,7 @@ class CityFragment : Fragment(R.layout.fragment_city) {
     }
 
     private fun getWeatherData() {
-        arguments?.getInt("ARG_CITY_ID")?.let {
-            viewModel.getWeatherById(it)
-        }
+        viewModel.getWeatherById()
     }
 
     private fun initAttrs(weather: WeatherDetail) {
